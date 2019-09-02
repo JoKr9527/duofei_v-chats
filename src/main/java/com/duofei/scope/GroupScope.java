@@ -27,6 +27,11 @@ public class GroupScope extends BaseScope {
         groupUsers = new CopyOnWriteArrayList<>();
     }
 
+    public GroupScope(String id){
+        super(id);
+        groupUsers = new CopyOnWriteArrayList<>();
+    }
+
     /**
      * 为当前域新增成员
      * @author duofei
@@ -45,5 +50,15 @@ public class GroupScope extends BaseScope {
      */
     public List<GroupUser> getAllGroupUsers(){
         return this.groupUsers;
+    }
+
+    /**
+     * 移除成员
+     * @author duofei
+     * @date 2019/9/2
+     * @param groupUser
+     */
+    public void removeGroupUser(GroupUser groupUser){
+        this.groupUsers.remove(groupUser);
     }
 }

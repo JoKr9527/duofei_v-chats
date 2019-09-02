@@ -75,7 +75,7 @@ public class OneToManyScopeFactory {
                 webRtcEndpoint.gatherCandidates();
                 oneToManyScope.setPresenter(webRtcEndpoint);
                 UserMessage userMessage = new UserMessage();
-                userMessage.setId("sdpAnswer");
+                userMessage.setId("sdpAnswer"+webRtcEndpoint.getName());
                 userMessage.setContent(sdpAnswer);
                 applicationContext.publishEvent(new MsgSendEvent(presenterUser.getSession(), userMessage));
                 webRtcEndpointScope.putE(oneToManyScope.getUserName(),webRtcEndpoint);
@@ -104,7 +104,7 @@ public class OneToManyScopeFactory {
                 webRtcEndpoint.gatherCandidates();
                 oneToManyScope.addViewer(userName,webRtcEndpoint);
                 UserMessage userMessage = new UserMessage();
-                userMessage.setId("sdpAnswer");
+                userMessage.setId("sdpAnswer" + webRtcEndpoint.getName());
                 userMessage.setContent(sdpAnswer);
                 applicationContext.publishEvent(new MsgSendEvent(viewer.getSession(), userMessage));
                 webRtcEndpointScope.putE(userName,webRtcEndpoint);

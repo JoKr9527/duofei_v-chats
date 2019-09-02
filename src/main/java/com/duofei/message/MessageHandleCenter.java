@@ -170,6 +170,14 @@ public class MessageHandleCenter {
                 }else if("recvMemberMedia".equals(userMessage.getId())){
                     // 请求接收指定成员流媒体数据
                     groupScopeFactory.recvMemberMedia(userMessage.getFrom(), userMessage.getTo(), ((String) userMessage.getContent()));
+                }else if("quitMeetRoom".equals(userMessage.getId())){
+                    // 给域中其它成员发送成员退出消息
+                    groupScopeFactory.notifyMembers(userMessage.getTo(),userMessage.getFrom(),userMessage);
+                    groupScopeFactory.quitMeetRoom(userMessage.getFrom(),userMessage.getTo());
+                }else if("closeMeetRoom".equals(userMessage.getId())){
+                    // 给域中其它成员发送会议室关闭消息
+                    groupScopeFactory.notifyMembers(userMessage.getTo(),userMessage.getFrom(),userMessage);
+                    groupScopeFactory.closeMeetRoom(userMessage.getFrom(),userMessage.getTo());
                 }
             }else if(messageProcessMode == MessageProcessMode.SDP_ONETOMANY){
                 if("call".equals(userMessage.getId())){

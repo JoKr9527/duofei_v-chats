@@ -4,12 +4,13 @@ import com.duofei.context.ScopeContext;
 import com.duofei.context.UserContext;
 import com.duofei.context.WebRtcEndpointContext;
 import com.duofei.event.MsgSendEvent;
+import com.duofei.message.AbstractMessage;
 import com.duofei.message.SystemMessage;
+import com.duofei.message.UserMessage;
 import com.duofei.service.KurentoService;
 import com.duofei.user.BaseUser;
 import com.duofei.user.GroupUser;
 import com.duofei.utils.IdGen;
-import org.kurento.client.MediaPipeline;
 import org.kurento.client.WebRtcEndpoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -47,7 +48,7 @@ public class GroupScopeFactory {
      */
     public String create(String meetRoomName,String userName){
         String id = IdGen.newShortId();
-        GroupScope groupScope = new GroupScope(id, kurentoService.createMediaPipeline());
+        GroupScope groupScope = new GroupScope(id);
         groupScope.setName(meetRoomName);
         groupScope.setUserName(userName);
         scopeContext.putE(id,groupScope);
@@ -66,16 +67,25 @@ public class GroupScopeFactory {
         Scope scope = scopeContext.getE(scopeId);
         if (scope instanceof GroupScope) {
             GroupScope groupScope = (GroupScope) scope;
+            // 创建mediaPipeline
+            if(groupScope.getMediaPipeline() == null){
+                synchronized (groupScope.getId()){
+                    groupScope.setMediaPipeline(kurentoService.createMediaPipeline());
+                }
+            }
             BaseUser baseUser = userContext.getE(userName);
             if(baseUser != null){
                 //创建 webrtc 输出流，将baseUser实例转换为groupuser
-                MediaPipeline mediaPipeline = kurentoService.createMediaPipeline();
-                WebRtcEndpoint webRtcEndpoint = kurentoService.createWebRtcEndpoint(mediaPipeline, baseUser.getSession());
-                webRtcEndpoint.processOffer(sdpOffer);
+                WebRtcEndpoint webRtcEndpoint = kurentoService.createWebRtcEndpoint(groupScope.getMediaPipeline(), baseUser.getSession());
+                String sdpAnswer = webRtcEndpoint.processOffer(sdpOffer);
+                UserMessage userMessage = new UserMessage();
+                userMessage.setId("sdpAnswer" + webRtcEndpoint.getName());
+                userMessage.setContent(sdpAnswer);
+                applicationContext.publishEvent(new MsgSendEvent(baseUser.getSession(), userMessage));
                 webRtcEndpoint.gatherCandidates();
                 webRtcEndpointContext.setIceCandidate(userName);
                 GroupUser groupUser = new GroupUser(userName,baseUser.getSession(), webRtcEndpoint, scopeId);
-                groupUser.setMediaPipeline(mediaPipeline);
+                groupUser.setMediaPipeline(groupScope.getMediaPipeline());
                 userContext.putE(userName, groupUser);
                 webRtcEndpointContext.putE(userName,webRtcEndpoint);
                 // 检验当前域是否有其它成员，存在的话，发送消息通知当前成员，要求其建立对应数量的 webrtcRecvOnly 对象，并且通知已经存在的成员有新的成员加入
@@ -116,13 +126,99 @@ public class GroupScopeFactory {
             // 创建对应的webrtc对象(名称为当前用户名+指定用户名)，设置为当前用户的输入流媒体
             WebRtcEndpoint webRtcEndpoint = kurentoService.createWebRtcEndpoint(currentGroupUser.getMediaPipeline(),
                     currentGroupUser.getSession(), userName+specialMemberUserName);
-            webRtcEndpoint.processOffer(sdpOffer);
+            String sdpAnswer = webRtcEndpoint.processOffer(sdpOffer);
+            UserMessage userMessage = new UserMessage();
+            userMessage.setId("sdpAnswer" + webRtcEndpoint.getName());
+            userMessage.setContent(sdpAnswer);
+            applicationContext.publishEvent(new MsgSendEvent(currentGroupUser.getSession(), userMessage));
             webRtcEndpoint.gatherCandidates();
-            webRtcEndpointContext.setIceCandidate(userName);
+            webRtcEndpointContext.setIceCandidate(userName+specialMemberUserName);
+            webRtcEndpointContext.putE(webRtcEndpoint.getName(),webRtcEndpoint);
             currentGroupUser.addIncomingMedia(userName+specialMemberUserName,webRtcEndpoint);
             // 使用指定成员的输出流，连接该输入流
             specialGroupUser.getOutgoingMedia().connect(webRtcEndpoint);
         }
+    }
 
+    /**
+     * 退出会议室
+     * @author duofei
+     * @date 2019/9/2
+     * @param userName
+     * @param scopeId
+     */
+    public void quitMeetRoom(String userName, String scopeId){
+        // 清理域
+        Scope scope = scopeContext.getE(scopeId);
+        BaseUser baseUser = userContext.getE(userName);
+        if(scope instanceof GroupScope && baseUser instanceof GroupUser){
+            GroupScope groupScope = (GroupScope) scope;
+            GroupUser user = (GroupUser) baseUser;
+            user.getOutgoingMedia().release();
+            user.getIncomingMedia().forEach((name,webRtcEndpoint)->{
+                webRtcEndpoint.release();
+                webRtcEndpointContext.removeE(name);
+            });
+            groupScope.removeGroupUser(user);
+            // 清理该用户（向上转型为普通用户为普通用户）
+            userContext.putE(userName,user.upgrade());
+        }
+        // 上下文清理
+        webRtcEndpointContext.removeE(userName);
+    }
+
+    /**
+     * 关闭会议室
+     * @author duofei
+     * @date 2019/9/2
+     * @param userName
+     * @param scopeId
+     */
+    public void closeMeetRoom(String userName, String scopeId){
+        Scope scope = scopeContext.getE(scopeId);
+        BaseUser baseUser = userContext.getE(userName);
+        if(scope instanceof GroupScope && baseUser instanceof GroupUser){
+            GroupScope groupScope = (GroupScope) scope;
+            GroupUser user = (GroupUser) baseUser;
+            // 清理域
+            groupScope.dispose();
+            // 清理域中所有用户（降级为普通用户）
+            groupScope.getAllGroupUsers().forEach(groupUser->{
+                userContext.putE(groupUser.getUserName(),groupUser.upgrade());
+                webRtcEndpointContext.removeE(groupUser.getUserName());
+                user.getIncomingMedia().forEach((name,webRtcEndpoint)->{
+                    webRtcEndpoint.release();
+                    webRtcEndpointContext.removeE(name);
+                });
+            });
+            groupScope.getAllGroupUsers().clear();
+            groupScope.setMediaPipeline(null);
+        }
+    }
+
+    /**
+     * 通知消息
+     * @author duofei
+     * @date 2019/9/2
+     * @param scopeId
+     * @param excludeUsername 被排除的用户
+     * @param abstractMessage
+     */
+    public void notifyMembers(String scopeId, String excludeUsername, AbstractMessage abstractMessage){
+        Scope scope = scopeContext.getE(scopeId);
+        if(scope instanceof GroupScope){
+            GroupScope groupScope = (GroupScope) scope;
+            List<GroupUser> allGroupUsers = groupScope.getAllGroupUsers();
+            allGroupUsers.stream().filter(groupUser ->{
+                if(groupUser.getUserName().equals(excludeUsername)){
+                    return false;
+                }
+                return true;
+            }).forEach(groupUser -> {
+                if(groupUser.getSession() != null){
+                    applicationContext.publishEvent(new MsgSendEvent(groupUser.getSession(),abstractMessage));
+                }
+            });
+        }
     }
 }

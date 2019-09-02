@@ -2,6 +2,8 @@ package com.duofei.context;
 
 import org.kurento.client.IceCandidate;
 import org.kurento.client.WebRtcEndpoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -18,6 +20,8 @@ public class WebRtcEndpointContext implements Context<WebRtcEndpoint> {
     private Map<String,WebRtcEndpoint> webRtcEndpointMap = new ConcurrentHashMap<>();
 
     private Map<String, List<IceCandidate>> iceCandidateMap = new ConcurrentHashMap<>();
+
+    private static Logger logger = LoggerFactory.getLogger(WebRtcEndpointContext.class);
 
     @Override
     public void putE(String key, WebRtcEndpoint webRtcEndpoint) {
@@ -64,13 +68,17 @@ public class WebRtcEndpointContext implements Context<WebRtcEndpoint> {
      * @param iceCandidate
      */
     public synchronized void addIceCandidate(String userName,IceCandidate iceCandidate){
-        if(webRtcEndpointMap.containsKey(userName)){
-            webRtcEndpointMap.get(userName).addIceCandidate(iceCandidate);
-        }else{
-            if(!iceCandidateMap.containsKey(userName)){
-                iceCandidateMap.put(userName, new ArrayList<>());
+        try{
+            if(webRtcEndpointMap.containsKey(userName)){
+                webRtcEndpointMap.get(userName).addIceCandidate(iceCandidate);
+            }else{
+                if(!iceCandidateMap.containsKey(userName)){
+                    iceCandidateMap.put(userName, new ArrayList<>());
+                }
+                iceCandidateMap.get(userName).add(iceCandidate);
             }
-            iceCandidateMap.get(userName).add(iceCandidate);
+        }catch (Exception e){
+            logger.error("addIceCandidate error! userName={}",userName, e);
         }
     }
 

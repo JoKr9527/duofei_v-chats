@@ -60,4 +60,19 @@ public class GroupUser extends BaseUser {
     public void setMediaPipeline(MediaPipeline mediaPipeline) {
         this.mediaPipeline = mediaPipeline;
     }
+
+    /**
+     * 将 groupUser 用户降级为 baseuser
+     * @author duofei
+     * @date 2019/9/2
+     * @return BaseUser 基础用户
+     */
+    public BaseUser upgrade(){
+        BaseUser baseUser = new BaseUser(this.getUserName(), this.getSession());
+        return baseUser;
+    }
+
+    public ConcurrentMap<String, WebRtcEndpoint> getIncomingMedia() {
+        return incomingMedia;
+    }
 }

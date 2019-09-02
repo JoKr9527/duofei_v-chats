@@ -54,7 +54,7 @@ public class KurentoService {
         result.setName(name);
         result.addIceCandidateFoundListener(event -> {
             IceCandidateUserMessage iceCandidateUserMessage = new IceCandidateUserMessage();
-            iceCandidateUserMessage.setId("iceCandidate");
+            iceCandidateUserMessage.setId("iceCandidate" + name);
             iceCandidateUserMessage.setContent(event.getCandidate());
             try {
                 synchronized (webSocketSession) {
