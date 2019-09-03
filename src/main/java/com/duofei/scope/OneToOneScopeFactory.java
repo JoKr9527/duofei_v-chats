@@ -83,13 +83,13 @@ public class OneToOneScopeFactory {
             // 响应调用者 sdp answer
             String fromSdpAnswer = callingFrom.processOffer(userData.getSdpOffer());
             UserMessage fromUserMsg = new UserMessage();
-            fromUserMsg.setId("sdpAnswer");
+            fromUserMsg.setId("sdpAnswer" + userData.getUserName());
             fromUserMsg.setContent(fromSdpAnswer);
             applicationContext.publishEvent(new MsgSendEvent(userContext.getE(userData.getUserName()).getSession(), fromUserMsg));
             // 响应被调用者 sdp answer
             String toSdpAnswer = callingTo.processOffer(sdpOffer);
             UserMessage toUserMsg = new UserMessage();
-            toUserMsg.setId("sdpAnswer");
+            toUserMsg.setId("sdpAnswer" + userName);
             toUserMsg.setContent(toSdpAnswer);
             applicationContext.publishEvent(new MsgSendEvent(userContext.getE(userName).getSession(), toUserMsg));
             callingFrom.gatherCandidates();
@@ -170,7 +170,5 @@ public class OneToOneScopeFactory {
             // 域资源处理
             scope.dispose();
         }
-
-
     }
 }
