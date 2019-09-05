@@ -1,4 +1,4 @@
-package com.duofei.message;
+package com.duofei.message.model;
 
 /**
  * 消息

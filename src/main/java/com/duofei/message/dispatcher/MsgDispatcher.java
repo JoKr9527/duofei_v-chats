@@ -1,6 +1,7 @@
-package com.duofei.message;
+package com.duofei.message.dispatcher;
 
-import com.duofei.handler.MsgHandle;
+import com.duofei.message.MsgHandle;
+import com.duofei.message.model.UserMessage;
 import com.duofei.utils.JsonUtils;
 
 import java.util.Map;

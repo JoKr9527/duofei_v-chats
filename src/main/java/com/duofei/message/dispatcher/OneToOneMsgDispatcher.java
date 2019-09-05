@@ -1,11 +1,12 @@
-package com.duofei.message;
+package com.duofei.message.dispatcher;
 
-import com.duofei.annotation.MsgHandler;
+import com.duofei.message.MsgHandler;
 import com.duofei.constant.RespStatus;
 import com.duofei.context.UserContext;
 import com.duofei.event.MsgSendEvent;
-import com.duofei.handler.MsgHandle;
-import com.duofei.scope.OneToManyScope;
+import com.duofei.message.MsgHandle;
+import com.duofei.message.model.SystemMessage;
+import com.duofei.message.model.UserMessage;
 import com.duofei.scope.OneToOneScope;
 import com.duofei.scope.OneToOneScopeFactory;
 import com.duofei.user.BaseUser;

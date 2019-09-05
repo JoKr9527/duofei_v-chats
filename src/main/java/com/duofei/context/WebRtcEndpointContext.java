@@ -1,7 +1,7 @@
 package com.duofei.context;
 
 import com.duofei.event.MsgSendEvent;
-import com.duofei.message.UserMessage;
+import com.duofei.message.model.UserMessage;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.WebRtcEndpoint;
 import org.slf4j.Logger;
@@ -11,7 +11,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
-import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 

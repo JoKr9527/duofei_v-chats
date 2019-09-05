@@ -1,7 +1,6 @@
 package com.duofei.service;
 
-import com.duofei.message.IceCandidateUserMessage;
-import com.google.gson.JsonObject;
+import com.duofei.message.model.IceCandidateUserMessage;
 import org.kurento.client.*;
 import org.kurento.jsonrpc.JsonUtils;
 import org.slf4j.Logger;

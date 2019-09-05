@@ -1,11 +1,12 @@
-package com.duofei.message;
+package com.duofei.message.dispatcher;
 
-import com.duofei.annotation.MsgHandler;
+import com.duofei.message.MsgHandler;
 import com.duofei.context.ScopeContext;
 import com.duofei.context.UserContext;
 import com.duofei.context.WebRtcEndpointContext;
-import com.duofei.event.MsgSendEvent;
-import com.duofei.handler.MsgHandle;
+import com.duofei.message.model.IceCandidateUserMessage;
+import com.duofei.message.MsgHandle;
+import com.duofei.message.model.UserMessage;
 import com.duofei.scope.BaseScope;
 import com.duofei.scope.OneToManyScopeFactory;
 import com.duofei.scope.Scope;
@@ -58,9 +59,9 @@ public class SdpMsgDispatcher implements MsgDispatcher {
         // 根据消息类型转换为具体对象
         final String id = jsonObject.get("id").getAsString();
         if("onIceCandidate".equals(id)){
-            msgHandles().get(id).handle(JsonUtils.fromJson(msg,IceCandidateUserMessage.class));
+            msgHandles().get(id).handle(JsonUtils.fromJson(msg, IceCandidateUserMessage.class));
         }else{
-            msgHandles().get(id).handle(JsonUtils.fromJson(msg,UserMessage.class));
+            msgHandles().get(id).handle(JsonUtils.fromJson(msg, UserMessage.class));
         }
     }
 

@@ -4,7 +4,7 @@ import com.duofei.context.ScopeContext;
 import com.duofei.context.UserContext;
 import com.duofei.context.WebRtcEndpointContext;
 import com.duofei.event.MsgSendEvent;
-import com.duofei.message.BaseMessage;
+import com.duofei.message.model.BaseMessage;
 import com.duofei.service.KurentoService;
 import com.duofei.user.BaseUser;
 import com.duofei.utils.IdGen;

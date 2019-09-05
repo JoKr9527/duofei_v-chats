@@ -3,7 +3,7 @@ package com.duofei.event;
 import com.duofei.bean.ScopeData;
 import com.duofei.context.ScopeContext;
 import com.duofei.context.UserContext;
-import com.duofei.message.SystemMessage;
+import com.duofei.message.model.SystemMessage;
 import com.duofei.scope.GroupScope;
 import com.duofei.scope.OneToManyScope;
 import com.duofei.scope.Scope;

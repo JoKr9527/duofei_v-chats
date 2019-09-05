@@ -1,4 +1,4 @@
-package com.duofei.annotation;
+package com.duofei.message;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

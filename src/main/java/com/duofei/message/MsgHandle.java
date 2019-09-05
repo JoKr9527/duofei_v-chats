@@ -1,4 +1,4 @@
-package com.duofei.handler;
+package com.duofei.message;
 
 /**
  * 消息处理器

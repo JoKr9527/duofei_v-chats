@@ -1,6 +1,6 @@
 package com.duofei.event;
 
-import com.duofei.message.BaseMessage;
+import com.duofei.message.model.BaseMessage;
 import org.springframework.context.ApplicationEvent;
 
 /**

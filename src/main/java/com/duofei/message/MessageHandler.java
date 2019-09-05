@@ -1,6 +1,6 @@
-package com.duofei.handler;
+package com.duofei.message;
 
-import com.duofei.message.BaseMessage;
+import com.duofei.message.model.BaseMessage;
 import com.duofei.scope.Scope;
 import com.duofei.user.BaseUser;
 

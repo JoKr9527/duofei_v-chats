@@ -1,10 +1,12 @@
-package com.duofei.message;
+package com.duofei.message.dispatcher;
 
-import com.duofei.annotation.MsgHandler;
+import com.duofei.message.MsgHandler;
 import com.duofei.context.UserContext;
 import com.duofei.event.BroadcastRoomEvent;
 import com.duofei.event.MsgSendEvent;
-import com.duofei.handler.MsgHandle;
+import com.duofei.message.MsgHandle;
+import com.duofei.message.model.SystemMessage;
+import com.duofei.message.model.UserMessage;
 import com.duofei.scope.OneToManyScopeFactory;
 import com.duofei.user.BaseUser;
 import org.springframework.beans.factory.annotation.Autowired;

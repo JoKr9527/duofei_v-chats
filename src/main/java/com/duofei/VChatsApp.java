@@ -1,21 +1,16 @@
 package com.duofei;
 
-import com.duofei.annotation.MsgHandler;
+import com.duofei.message.MsgHandler;
 import com.duofei.config.SpringApplicationContext;
-import com.duofei.handler.MsgHandle;
-import com.duofei.message.GroupMsgDispatcher;
-import com.duofei.message.MsgDispatcher;
+import com.duofei.message.MsgHandle;
+import com.duofei.message.dispatcher.MsgDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import javax.annotation.Resource;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.Map;
