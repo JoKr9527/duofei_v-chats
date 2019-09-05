@@ -13,11 +13,6 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class GroupUser extends BaseUser {
 
-    /**
-     * 域id
-     */
-    private String scopeId;
-
     private final WebRtcEndpoint outgoingMedia;
 
     private final ConcurrentMap<String, WebRtcEndpoint> incomingMedia = new ConcurrentHashMap<>();
@@ -26,16 +21,7 @@ public class GroupUser extends BaseUser {
 
     public GroupUser(String userName, WebSocketSession webSocketSession,WebRtcEndpoint outgoingMedia, String scopeId) {
         super(userName, webSocketSession);
-        this.scopeId = scopeId;
         this.outgoingMedia = outgoingMedia;
-    }
-
-    public String getScopeId() {
-        return scopeId;
-    }
-
-    public void setScopeId(String scopeId) {
-        this.scopeId = scopeId;
     }
 
     public WebRtcEndpoint getOutgoingMedia() {

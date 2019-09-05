@@ -74,11 +74,11 @@ public class SystemEventListener {
         Object source = msgSendEvent.getSource();
         if (source instanceof WebSocketSession) {
             WebSocketSession session = (WebSocketSession) source;
-            if (msgSendEvent.getAbstractMessage() != null) {
+            if (msgSendEvent.getBaseMessage() != null) {
                 try {
                     synchronized (session) {
                         if(session.isOpen()){
-                            session.sendMessage(new TextMessage(JsonUtils.toJSON(msgSendEvent.getAbstractMessage())));
+                            session.sendMessage(new TextMessage(JsonUtils.toJSON(msgSendEvent.getBaseMessage())));
                         }
                     }
                 } catch (IOException e) {

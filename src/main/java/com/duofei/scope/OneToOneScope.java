@@ -15,9 +15,17 @@ public class OneToOneScope extends BaseScope {
      */
     private WebRtcEndpoint callingTo;
     /**
+     * 接收者用户名
+     */
+    private String callingToUserName;
+    /**
      * 发送方
      */
     private WebRtcEndpoint callingFrom;
+    /**
+     * 发送方用户名
+     */
+    private String callingFromUserName;
 
     public OneToOneScope(String id, MediaPipeline mediaPipeline){
         super(id,mediaPipeline);
@@ -41,6 +49,22 @@ public class OneToOneScope extends BaseScope {
 
     public void setCallingFrom(WebRtcEndpoint callingFrom) {
         this.callingFrom = callingFrom;
+    }
+
+    public String getCallingToUserName() {
+        return callingToUserName;
+    }
+
+    public void setCallingToUserName(String callingToUserName) {
+        this.callingToUserName = callingToUserName;
+    }
+
+    public String getCallingFromUserName() {
+        return callingFromUserName;
+    }
+
+    public void setCallingFromUserName(String callingFromUserName) {
+        this.callingFromUserName = callingFromUserName;
     }
 
     /**

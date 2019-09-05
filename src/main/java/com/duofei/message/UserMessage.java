@@ -5,7 +5,7 @@ package com.duofei.message;
  * @author duofei
  * @date 2019/8/16
  */
-public class UserMessage<T> extends AbstractMessage<T> {
+public class UserMessage<T> extends BaseMessage<T> {
 
     /**
      * 消息发送者
@@ -16,9 +16,9 @@ public class UserMessage<T> extends AbstractMessage<T> {
      */
     private String to;
     /**
-     * 消息处理模式
+     * 存放额外的字段
      */
-    private String messageProcessMode;
+    private String other;
 
     public String getFrom() {
         return from;
@@ -36,11 +36,11 @@ public class UserMessage<T> extends AbstractMessage<T> {
         this.to = to;
     }
 
-    public String getMessageProcessMode() {
-        return messageProcessMode;
+    public String getOther() {
+        return other;
     }
 
-    public void setMessageProcessMode(String messageProcessMode) {
-        this.messageProcessMode = messageProcessMode;
+    public void setOther(String other) {
+        this.other = other;
     }
 }

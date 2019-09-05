@@ -10,6 +10,11 @@ import org.springframework.web.socket.WebSocketSession;
 public class BaseUser {
 
     /**
+     * 域id
+     */
+    private String scopeId;
+
+    /**
      * 用户名
      */
     private String userName;
@@ -33,5 +38,13 @@ public class BaseUser {
 
     public WebSocketSession getSession() {
         return session;
+    }
+
+    public String getScopeId() {
+        return scopeId;
+    }
+
+    public void setScopeId(String scopeId) {
+        this.scopeId = scopeId;
     }
 }

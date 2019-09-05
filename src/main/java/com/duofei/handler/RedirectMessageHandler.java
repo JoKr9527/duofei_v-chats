@@ -1,6 +1,6 @@
 package com.duofei.handler;
 
-import com.duofei.message.AbstractMessage;
+import com.duofei.message.BaseMessage;
 import com.duofei.scope.Scope;
 import com.duofei.user.BaseUser;
 import com.duofei.utils.JsonUtils;
@@ -24,17 +24,17 @@ public class RedirectMessageHandler implements MessageHandler {
     private static Logger logger = LoggerFactory.getLogger(RedirectMessageHandler.class);
 
     @Override
-    public <T> void handle(Scope scope, List<BaseUser> baseUsers, AbstractMessage<T> abstractMessage) {
+    public <T> void handle(Scope scope, List<BaseUser> baseUsers, BaseMessage<T> baseMessage) {
         try {
             Iterator<BaseUser> iterator = baseUsers.iterator();
             while(iterator.hasNext()){
                 BaseUser baseUser = iterator.next();
                 if(baseUser.getSession().isOpen()){
-                    baseUser.getSession().sendMessage(new TextMessage(JsonUtils.toJSON(abstractMessage)));
+                    baseUser.getSession().sendMessage(new TextMessage(JsonUtils.toJSON(baseMessage)));
                 }
             }
         } catch (IOException e) {
-            logger.error("直接转发消息发生错误,users={},msg={}",baseUsers,abstractMessage,e);
+            logger.error("直接转发消息发生错误,users={},msg={}",baseUsers, baseMessage,e);
         }
     }
 }

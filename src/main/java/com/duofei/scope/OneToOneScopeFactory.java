@@ -1,22 +1,20 @@
 package com.duofei.scope;
 
-import com.duofei.bean.UserData;
 import com.duofei.context.ScopeContext;
 import com.duofei.context.UserContext;
 import com.duofei.context.WebRtcEndpointContext;
 import com.duofei.event.MsgSendEvent;
-import com.duofei.message.AbstractMessage;
+import com.duofei.message.BaseMessage;
 import com.duofei.message.UserMessage;
 import com.duofei.service.KurentoService;
+import com.duofei.user.BaseUser;
 import com.duofei.utils.IdGen;
 import org.kurento.client.WebRtcEndpoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * oneTooneScope 管理工厂
@@ -33,72 +31,25 @@ public class OneToOneScopeFactory {
     @Autowired
     private UserContext userContext;
     @Autowired
-    private WebRtcEndpointContext webRtcEndpointScope;
+    private WebRtcEndpointContext webRtcEndpointContext;
     @Autowired
     private ApplicationContext applicationContext;
-
-    /**
-     * 临时数据存储
-     */
-    private static Map<String, UserData> userDataMap = new ConcurrentHashMap<>();
 
     /**
      * 创建一个OneToOne域，存入域上下文
      * @author duofei
      * @date 2019/8/21
      * @param userName
-     * @param sdpOffer
      * @return String 域的唯一id
      * @throws
      */
-    public String create(String userName,String sdpOffer){
+    public OneToOneScope create(String userName){
         String id = IdGen.newShortId();
-        Scope scope = new OneToOneScope(id);
+        OneToOneScope scope = new OneToOneScope(id);
+        scope.setUserName(userName);
+        scope.setMediaPipeline(kurentoService.createMediaPipeline());
         scopeContext.putE(id,scope);
-        UserData userData = new UserData(userName, sdpOffer);
-        userDataMap.put(id, userData);
-        return id;
-    }
-
-    /**
-     * 激活域
-     * @author duofei
-     * @date 2019/8/21
-     * @param id 域id
-     * @param userName
-     * @param sdpOffer sdpOffer
-     */
-    public void enableScope(String id,String userName,String sdpOffer){
-        Scope scope = scopeContext.getE(id);
-        UserData userData = userDataMap.get(id);
-        if(scope != null && scope instanceof OneToOneScope && userData != null){
-            OneToOneScope oneToOneScope = ((OneToOneScope) scope);
-            oneToOneScope.setMediaPipeline(kurentoService.createMediaPipeline());
-            WebRtcEndpoint callingFrom = kurentoService.createWebRtcEndpoint(oneToOneScope.getMediaPipeline(), userContext.getE(userData.getUserName()).getSession());
-            WebRtcEndpoint callingTo = kurentoService.createWebRtcEndpoint(oneToOneScope.getMediaPipeline(), userContext.getE(userName).getSession());
-            oneToOneScope.setCallingTo(callingTo);
-            oneToOneScope.setCallingFrom(callingFrom);
-            callingFrom.connect(callingTo);
-            callingTo.connect(callingFrom);
-            // 响应调用者 sdp answer
-            String fromSdpAnswer = callingFrom.processOffer(userData.getSdpOffer());
-            UserMessage fromUserMsg = new UserMessage();
-            fromUserMsg.setId("sdpAnswer" + userData.getUserName());
-            fromUserMsg.setContent(fromSdpAnswer);
-            applicationContext.publishEvent(new MsgSendEvent(userContext.getE(userData.getUserName()).getSession(), fromUserMsg));
-            // 响应被调用者 sdp answer
-            String toSdpAnswer = callingTo.processOffer(sdpOffer);
-            UserMessage toUserMsg = new UserMessage();
-            toUserMsg.setId("sdpAnswer" + userName);
-            toUserMsg.setContent(toSdpAnswer);
-            applicationContext.publishEvent(new MsgSendEvent(userContext.getE(userName).getSession(), toUserMsg));
-            callingFrom.gatherCandidates();
-            callingTo.gatherCandidates();
-            webRtcEndpointScope.putE(userData.getUserName(),callingFrom);
-            webRtcEndpointScope.putE(userName,callingTo);
-            webRtcEndpointScope.setIceCandidate(userData.getUserName());
-            webRtcEndpointScope.setIceCandidate(userName);
-        }
+        return scope;
     }
 
     /**
@@ -108,7 +59,7 @@ public class OneToOneScopeFactory {
      * @param scopeId
      * @param message
      */
-    public void notifyMembers(String scopeId,AbstractMessage message){
+    public void notifyMembers(String scopeId, BaseMessage message){
         Scope scope = scopeContext.getE(scopeId);
         if(scope != null && scope instanceof OneToOneScope){
             OneToOneScope oneToOneScope = (OneToOneScope) scope;
@@ -130,7 +81,7 @@ public class OneToOneScopeFactory {
      * @param scopeId
      * @param message
      */
-    public void notifyMembers(String scopeId,String excludeUserName,AbstractMessage message){
+    public void notifyMembers(String scopeId, String excludeUserName, BaseMessage message){
         Scope scope = scopeContext.getE(scopeId);
         if(scope != null && scope instanceof OneToOneScope){
             OneToOneScope oneToOneScope = (OneToOneScope) scope;
@@ -158,17 +109,56 @@ public class OneToOneScopeFactory {
             OneToOneScope oneToOneScope = (OneToOneScope) scope;
             String callFrom = Optional.ofNullable(oneToOneScope.getCallingFrom()).map(WebRtcEndpoint::getName).orElse(null);
             if(callFrom != null){
-                webRtcEndpointScope.removeE(callFrom);
+                webRtcEndpointContext.removeE(callFrom);
             }
             String callTo = Optional.ofNullable(oneToOneScope.getCallingTo()).map(WebRtcEndpoint::getName).orElse(null);
             if(callTo != null){
-                webRtcEndpointScope.removeE(callTo);
+                webRtcEndpointContext.removeE(callTo);
+            }
+            // 重置用户域id
+            BaseUser fromUser = userContext.getE(oneToOneScope.getCallingFromUserName());
+            if(fromUser != null){
+                fromUser.setScopeId(null);
+            }
+            BaseUser toUser = userContext.getE(oneToOneScope.getCallingToUserName());
+            if(toUser != null){
+                toUser.setScopeId(null);
             }
         }
         scopeContext.removeE(scopeId);
         if(scope != null){
             // 域资源处理
             scope.dispose();
+        }
+    }
+
+    /**
+     * 激活域
+     * @author duofei
+     * @date 2019/9/4
+     * @param scopeId 域id
+     * @param userName 用户名
+     * @param name webRtc 名称
+     */
+    public void active(String scopeId, String userName, String name){
+        Scope scope = scopeContext.getE(scopeId);
+        synchronized (scopeId.intern()){
+            if(scope != null && scope instanceof OneToOneScope){
+                OneToOneScope oneToOneScope = ((OneToOneScope) scope);
+                WebRtcEndpoint webRtcEndpoint = webRtcEndpointContext.getE(name);
+                if(userName.equals(oneToOneScope.getUserName())){
+                    oneToOneScope.setCallingFrom(webRtcEndpoint);
+                    if(oneToOneScope.getCallingTo() != null){
+                        oneToOneScope.connect();
+                    }
+                }else {
+                    oneToOneScope.setCallingTo(webRtcEndpoint);
+                    if(oneToOneScope.getCallingFrom() != null){
+                        oneToOneScope.connect();
+                    }
+                }
+                userContext.getE(userName).setScopeId(scopeId);
+            }
         }
     }
 }

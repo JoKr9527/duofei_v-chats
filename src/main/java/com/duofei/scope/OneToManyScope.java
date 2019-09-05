@@ -19,6 +19,10 @@ public class OneToManyScope extends BaseScope {
      */
     private WebRtcEndpoint presenter;
     /**
+     * 主持人姓名
+     */
+    private String presenterUserName;
+    /**
      * 参观者
      */
     private Map<String,WebRtcEndpoint> viewer;
@@ -45,7 +49,15 @@ public class OneToManyScope extends BaseScope {
     public void setPresenter(WebRtcEndpoint presenter) {
         this.presenter = presenter;
     }
-    
+
+    public String getPresenterUserName() {
+        return presenterUserName;
+    }
+
+    public void setPresenterUserName(String presenterUserName) {
+        this.presenterUserName = presenterUserName;
+    }
+
     /**
      * 新增参观者
      * @author duofei

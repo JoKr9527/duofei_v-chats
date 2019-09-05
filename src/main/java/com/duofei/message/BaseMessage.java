@@ -5,7 +5,7 @@ package com.duofei.message;
  * @author duofei
  * @date 2019/8/16
  */
-public abstract class AbstractMessage<T> {
+public class BaseMessage<T> {
 
     /**
      * 消息id：标识消息

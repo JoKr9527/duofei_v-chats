@@ -4,9 +4,8 @@ import com.duofei.context.ScopeContext;
 import com.duofei.context.UserContext;
 import com.duofei.context.WebRtcEndpointContext;
 import com.duofei.event.MsgSendEvent;
-import com.duofei.message.AbstractMessage;
+import com.duofei.message.BaseMessage;
 import com.duofei.message.SystemMessage;
-import com.duofei.message.UserMessage;
 import com.duofei.service.KurentoService;
 import com.duofei.user.BaseUser;
 import com.duofei.user.GroupUser;
@@ -42,15 +41,16 @@ public class GroupScopeFactory {
      * 创建 groupScope
      * @author duofei
      * @date 2019/8/29
-     * @param meetRoomName 会议室名
      * @param userName 创建者名称
+     * @param meetRoomName 会议室名
      * @return 域id
      */
-    public String create(String meetRoomName,String userName){
+    public String create(String userName,String meetRoomName){
         String id = IdGen.newShortId();
         GroupScope groupScope = new GroupScope(id);
         groupScope.setName(meetRoomName);
         groupScope.setUserName(userName);
+        groupScope.setMediaPipeline(kurentoService.createMediaPipeline());
         scopeContext.putE(id,groupScope);
         return id;
     }
@@ -61,33 +61,24 @@ public class GroupScopeFactory {
      * @date 2019/8/30
      * @param scopeId
      * @param userName
-     * @param sdpOffer
      */
-    public void activeMember(String scopeId,String userName, String sdpOffer){
+    public void active(String scopeId,String userName){
         Scope scope = scopeContext.getE(scopeId);
         if (scope instanceof GroupScope) {
             GroupScope groupScope = (GroupScope) scope;
             // 创建mediaPipeline
             if(groupScope.getMediaPipeline() == null){
-                synchronized (groupScope.getId()){
+                synchronized (groupScope.getId().intern()){
                     groupScope.setMediaPipeline(kurentoService.createMediaPipeline());
                 }
             }
             BaseUser baseUser = userContext.getE(userName);
             if(baseUser != null){
-                //创建 webrtc 输出流，将baseUser实例转换为groupuser
-                WebRtcEndpoint webRtcEndpoint = kurentoService.createWebRtcEndpoint(groupScope.getMediaPipeline(), baseUser.getSession());
-                String sdpAnswer = webRtcEndpoint.processOffer(sdpOffer);
-                UserMessage userMessage = new UserMessage();
-                userMessage.setId("sdpAnswer" + webRtcEndpoint.getName());
-                userMessage.setContent(sdpAnswer);
-                applicationContext.publishEvent(new MsgSendEvent(baseUser.getSession(), userMessage));
-                webRtcEndpoint.gatherCandidates();
-                webRtcEndpointContext.setIceCandidate(userName);
+                WebRtcEndpoint webRtcEndpoint = webRtcEndpointContext.getE(userName);
                 GroupUser groupUser = new GroupUser(userName,baseUser.getSession(), webRtcEndpoint, scopeId);
                 groupUser.setMediaPipeline(groupScope.getMediaPipeline());
+                groupUser.setScopeId(scopeId);
                 userContext.putE(userName, groupUser);
-                webRtcEndpointContext.putE(userName,webRtcEndpoint);
                 // 检验当前域是否有其它成员，存在的话，发送消息通知当前成员，要求其建立对应数量的 webrtcRecvOnly 对象，并且通知已经存在的成员有新的成员加入
                 List<GroupUser> allGroupUsers = groupScope.getAllGroupUsers();
                 if(allGroupUsers.size() != 0){
@@ -115,25 +106,14 @@ public class GroupScopeFactory {
      * @date 2019/8/30
      * @param userName 当前用户
      * @param specialMemberUserName 指定成员
-     * @param sdpOffer
      */
-    public void recvMemberMedia(String userName, String specialMemberUserName, String sdpOffer){
+    public void recvMemberMedia(String userName, String specialMemberUserName){
         BaseUser currentUser = userContext.getE(userName);
         BaseUser specialUser = userContext.getE(specialMemberUserName);
         if(currentUser instanceof GroupUser && specialUser instanceof GroupUser){
             GroupUser currentGroupUser = (GroupUser) currentUser;
             GroupUser specialGroupUser = (GroupUser) specialUser;
-            // 创建对应的webrtc对象(名称为当前用户名+指定用户名)，设置为当前用户的输入流媒体
-            WebRtcEndpoint webRtcEndpoint = kurentoService.createWebRtcEndpoint(currentGroupUser.getMediaPipeline(),
-                    currentGroupUser.getSession(), userName+specialMemberUserName);
-            String sdpAnswer = webRtcEndpoint.processOffer(sdpOffer);
-            UserMessage userMessage = new UserMessage();
-            userMessage.setId("sdpAnswer" + webRtcEndpoint.getName());
-            userMessage.setContent(sdpAnswer);
-            applicationContext.publishEvent(new MsgSendEvent(currentGroupUser.getSession(), userMessage));
-            webRtcEndpoint.gatherCandidates();
-            webRtcEndpointContext.setIceCandidate(userName+specialMemberUserName);
-            webRtcEndpointContext.putE(webRtcEndpoint.getName(),webRtcEndpoint);
+            WebRtcEndpoint webRtcEndpoint = webRtcEndpointContext.getE(userName + specialMemberUserName);
             currentGroupUser.addIncomingMedia(userName+specialMemberUserName,webRtcEndpoint);
             // 使用指定成员的输出流，连接该输入流
             specialGroupUser.getOutgoingMedia().connect(webRtcEndpoint);
@@ -144,10 +124,10 @@ public class GroupScopeFactory {
      * 退出会议室
      * @author duofei
      * @date 2019/9/2
-     * @param userName
      * @param scopeId
+     * @param userName
      */
-    public void quitMeetRoom(String userName, String scopeId){
+    public void quitMeetRoom(String scopeId, String userName){
         // 清理域
         Scope scope = scopeContext.getE(scopeId);
         BaseUser baseUser = userContext.getE(userName);
@@ -171,10 +151,10 @@ public class GroupScopeFactory {
      * 关闭会议室
      * @author duofei
      * @date 2019/9/2
-     * @param userName
      * @param scopeId
+     * @param userName
      */
-    public void closeMeetRoom(String userName, String scopeId){
+    public void closeMeetRoom(String scopeId, String userName){
         Scope scope = scopeContext.getE(scopeId);
         BaseUser baseUser = userContext.getE(userName);
         if(scope instanceof GroupScope && baseUser instanceof GroupUser){
@@ -202,9 +182,9 @@ public class GroupScopeFactory {
      * @date 2019/9/2
      * @param scopeId
      * @param excludeUsername 被排除的用户
-     * @param abstractMessage
+     * @param baseMessage
      */
-    public void notifyMembers(String scopeId, String excludeUsername, AbstractMessage abstractMessage){
+    public void notifyMembers(String scopeId, String excludeUsername, BaseMessage baseMessage){
         Scope scope = scopeContext.getE(scopeId);
         if(scope instanceof GroupScope){
             GroupScope groupScope = (GroupScope) scope;
@@ -216,7 +196,7 @@ public class GroupScopeFactory {
                 return true;
             }).forEach(groupUser -> {
                 if(groupUser.getSession() != null){
-                    applicationContext.publishEvent(new MsgSendEvent(groupUser.getSession(),abstractMessage));
+                    applicationContext.publishEvent(new MsgSendEvent(groupUser.getSession(), baseMessage));
                 }
             });
         }

@@ -1,6 +1,6 @@
 package com.duofei.event;
 
-import com.duofei.message.AbstractMessage;
+import com.duofei.message.BaseMessage;
 import org.springframework.context.ApplicationEvent;
 
 /**
@@ -10,15 +10,15 @@ import org.springframework.context.ApplicationEvent;
  */
 public class MsgSendEvent extends ApplicationEvent {
 
-    private AbstractMessage abstractMessage;
+    private BaseMessage baseMessage;
 
-    public MsgSendEvent(Object source, AbstractMessage abstractMessage) {
+    public MsgSendEvent(Object source, BaseMessage baseMessage) {
         super(source);
-        this.abstractMessage = abstractMessage;
+        this.baseMessage = baseMessage;
     }
 
-    public AbstractMessage getAbstractMessage() {
-        return abstractMessage;
+    public BaseMessage getBaseMessage() {
+        return baseMessage;
     }
 
 }

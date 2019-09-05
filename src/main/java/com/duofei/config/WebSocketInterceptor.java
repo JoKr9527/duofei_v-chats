@@ -1,14 +1,10 @@
 package com.duofei.config;
 
-import com.duofei.constant.MessageIdConstant;
-import com.duofei.handler.ChatHandler;
-import com.duofei.message.SystemMessage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
-import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 

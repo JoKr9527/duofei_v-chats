@@ -5,7 +5,7 @@ package com.duofei.message;
  * @author duofei
  * @date 2019/8/16
  */
-public class SystemMessage extends AbstractMessage<Object> {
+public class SystemMessage extends BaseMessage<Object> {
 
     /**
      * 失败或者成功的类型判断
