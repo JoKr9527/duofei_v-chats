@@ -173,6 +173,8 @@ public class GroupScopeFactory {
             });
             groupScope.getAllGroupUsers().clear();
             groupScope.setMediaPipeline(null);
+            // 域上下文移除该域
+            scopeContext.removeE(scopeId);
         }
     }
 

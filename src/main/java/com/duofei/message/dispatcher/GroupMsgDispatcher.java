@@ -127,6 +127,8 @@ public class GroupMsgDispatcher implements MsgDispatcher {
             // 给域中其它成员发送会议室关闭消息
             groupScopeFactory.notifyMembers(userMessage.getTo(),userMessage.getFrom(),userMessage);
             groupScopeFactory.closeMeetRoom(userMessage.getTo(),userMessage.getFrom());
+            // 发送在线会议室通知
+            applicationContext.publishEvent(new MeetRoomEvent(new Object()));
         };
         return result;
     }
