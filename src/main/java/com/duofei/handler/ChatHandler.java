@@ -7,9 +7,13 @@ import com.duofei.event.BroadcastRoomEvent;
 import com.duofei.event.MeetRoomEvent;
 import com.duofei.event.OnlineUsersEvent;
 import com.duofei.message.dispatcher.MsgDispatcher;
+import com.duofei.message.dispatcher.PeopleRoomMsgDispatcher;
 import com.duofei.message.model.SystemMessage;
 import com.duofei.message.model.UserMessage;
 import com.duofei.scope.*;
+import com.duofei.scope.factory.GroupScopeFactory;
+import com.duofei.scope.factory.OneToManyScopeFactory;
+import com.duofei.scope.factory.OneToOneScopeFactory;
 import com.duofei.user.BaseUser;
 import com.duofei.utils.JsonUtils;
 import com.google.gson.JsonObject;
@@ -51,6 +55,8 @@ public class ChatHandler extends TextWebSocketHandler {
     private MsgDispatcher oneToManyMsgDispatcher;
     @Resource
     private MsgDispatcher groupMsgDispatcher;
+    @Resource
+    private PeopleRoomMsgDispatcher peopleRoomMsgDispatcher;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -82,6 +88,9 @@ public class ChatHandler extends TextWebSocketHandler {
                 break;
             case "GroupMsg":
                 groupMsgDispatcher.dispatch(message.getPayload());
+                break;
+            case "PeopleRoomMsg":
+                peopleRoomMsgDispatcher.dispatch(message.getPayload());
                 break;
             default:
         }

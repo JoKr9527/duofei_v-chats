@@ -7,7 +7,7 @@ import com.duofei.event.MsgSendEvent;
 import com.duofei.message.MsgHandle;
 import com.duofei.message.model.SystemMessage;
 import com.duofei.message.model.UserMessage;
-import com.duofei.scope.GroupScopeFactory;
+import com.duofei.scope.factory.GroupScopeFactory;
 import com.duofei.user.BaseUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;

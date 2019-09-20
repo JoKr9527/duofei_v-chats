@@ -1,7 +1,5 @@
 package com.duofei.message.model;
 
-import com.duofei.message.model.BaseMessage;
-
 /**
  * 用户交互消息：用于流程控制，会话协商
  * @author duofei

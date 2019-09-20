@@ -1,4 +1,4 @@
-package com.duofei.scope;
+package com.duofei.scope.factory;
 
 import com.duofei.context.ScopeContext;
 import com.duofei.context.UserContext;
@@ -6,6 +6,8 @@ import com.duofei.context.WebRtcEndpointContext;
 import com.duofei.event.MsgSendEvent;
 import com.duofei.message.model.BaseMessage;
 import com.duofei.message.model.SystemMessage;
+import com.duofei.scope.GroupScope;
+import com.duofei.scope.Scope;
 import com.duofei.service.KurentoService;
 import com.duofei.user.BaseUser;
 import com.duofei.user.GroupUser;

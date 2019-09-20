@@ -8,7 +8,7 @@ import com.duofei.message.model.IceCandidateUserMessage;
 import com.duofei.message.MsgHandle;
 import com.duofei.message.model.UserMessage;
 import com.duofei.scope.BaseScope;
-import com.duofei.scope.OneToManyScopeFactory;
+import com.duofei.scope.factory.OneToManyScopeFactory;
 import com.duofei.scope.Scope;
 import com.duofei.service.KurentoService;
 import com.duofei.user.BaseUser;

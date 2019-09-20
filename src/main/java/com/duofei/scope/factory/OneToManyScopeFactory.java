@@ -1,10 +1,12 @@
-package com.duofei.scope;
+package com.duofei.scope.factory;
 
 import com.duofei.context.ScopeContext;
 import com.duofei.context.UserContext;
 import com.duofei.context.WebRtcEndpointContext;
 import com.duofei.event.MsgSendEvent;
 import com.duofei.message.model.BaseMessage;
+import com.duofei.scope.OneToManyScope;
+import com.duofei.scope.Scope;
 import com.duofei.service.KurentoService;
 import com.duofei.user.BaseUser;
 import com.duofei.utils.IdGen;
@@ -31,7 +33,7 @@ public class OneToManyScopeFactory {
     @Autowired
     private UserContext userContext;
     @Autowired
-    private WebRtcEndpointContext webRtcEndpointScope;
+    private WebRtcEndpointContext webRtcEndpointContext;
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -64,10 +66,10 @@ public class OneToManyScopeFactory {
         if(scope != null && scope instanceof OneToManyScope){
             OneToManyScope oneToManyScope = ((OneToManyScope) scope);
             if(username.equals(oneToManyScope.getUserName())){
-                oneToManyScope.setPresenter(webRtcEndpointScope.getE(username));
+                oneToManyScope.setPresenter(webRtcEndpointContext.getE(username));
                 oneToManyScope.setPresenterUserName(username);
             }else{
-                oneToManyScope.addViewer(username,webRtcEndpointScope.getE(username));
+                oneToManyScope.addViewer(username, webRtcEndpointContext.getE(username));
             }
             BaseUser user = userContext.getE(username);
             if(user != null){
@@ -149,9 +151,9 @@ public class OneToManyScopeFactory {
         if(scope != null && scope instanceof OneToManyScope){
             OneToManyScope oneToManyScope = (OneToManyScope) scope;
             // 上下文资源清理
-            webRtcEndpointScope.removeE(oneToManyScope.getPresenter().getName());
+            webRtcEndpointContext.removeE(oneToManyScope.getPresenter().getName());
             oneToManyScope.getViewers().forEach(username -> {
-                webRtcEndpointScope.removeE(username);
+                webRtcEndpointContext.removeE(username);
                 BaseUser baseUser = userContext.getE(username);
                 if(baseUser != null){
                     baseUser.setScopeId(null);
