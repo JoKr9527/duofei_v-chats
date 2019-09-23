@@ -43,8 +43,6 @@ public class SdpMsgDispatcher implements MsgDispatcher {
     private UserContext userContext;
     @Autowired
     private WebRtcEndpointContext webRtcEndpointContext;
-    @Autowired
-    private ApplicationContext applicationContext;
 
     private static Map<String, MsgHandle> msgHandles = new HashMap<>();
 
@@ -75,14 +73,17 @@ public class SdpMsgDispatcher implements MsgDispatcher {
         MsgHandle<UserMessage> result = (UserMessage userMessage) -> {
             Scope scope = scopeContext.getE(userMessage.getTo());
             BaseUser baseUser = userContext.getE(userMessage.getFrom());
+            MediaPipeline mediaPipeline = null;
             if(scope != null && scope instanceof BaseScope){
                 BaseScope baseScope = (BaseScope) scope;
-                MediaPipeline mediaPipeline = baseScope.getMediaPipeline();
-                WebRtcEndpoint webRtcEndpoint = kurentoService.createWebRtcEndpoint(mediaPipeline, baseUser.getSession(), userMessage.getOther());
-                webRtcEndpointContext.setSdpOffer(userMessage.getOther(), ((String) userMessage.getContent()));
-                webRtcEndpointContext.putE(userMessage.getOther(),webRtcEndpoint);
-                webRtcEndpointContext.activeWebRtc(userMessage.getOther(),baseUser.getSession());
+                mediaPipeline = baseScope.getMediaPipeline();
+            }else{
+                mediaPipeline = kurentoService.createMediaPipeline();
             }
+            WebRtcEndpoint webRtcEndpoint = kurentoService.createWebRtcEndpoint(mediaPipeline, baseUser.getSession(), userMessage.getOther());
+            webRtcEndpointContext.setSdpOffer(userMessage.getOther(), ((String) userMessage.getContent()));
+            webRtcEndpointContext.putE(userMessage.getOther(),webRtcEndpoint);
+            webRtcEndpointContext.activeWebRtc(userMessage.getOther(),baseUser.getSession());
         };
         return result;
     }
