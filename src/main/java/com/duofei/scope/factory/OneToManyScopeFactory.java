@@ -138,6 +138,7 @@ public class OneToManyScopeFactory {
                 baseUser.setScopeId(null);
             }
         }
+        webRtcEndpointContext.removeE(username);
     }
 
     /**

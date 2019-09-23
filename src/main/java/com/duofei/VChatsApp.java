@@ -1,5 +1,6 @@
 package com.duofei;
 
+import com.duofei.handler.ChatHandler;
 import com.duofei.message.MsgHandler;
 import com.duofei.config.SpringApplicationContext;
 import com.duofei.message.MsgHandle;
@@ -29,13 +30,19 @@ public class VChatsApp {
 
     public static void main(String[] args) {
         SpringApplication.run(VChatsApp.class, args);
-        // 注册消息处理器
+        // 获取所有的消息分发器
         Map<String, MsgDispatcher> beansOfType = SpringApplicationContext.getApplicationContext().getBeansOfType(MsgDispatcher.class);
         Set<Map.Entry<String, MsgDispatcher>> entries = beansOfType.entrySet();
         Iterator<Map.Entry<String, MsgDispatcher>> iterator =entries.iterator();
+        // websocket 消息处理
+        ChatHandler chatHandler = SpringApplicationContext.getApplicationContext().getBean(ChatHandler.class);
         while (iterator.hasNext()){
             Map.Entry<String, MsgDispatcher> next = iterator.next();
             MsgDispatcher msgDispatcher = next.getValue();
+            // 注册消息分发器到 websocket文本消息处理
+            String clzzName = msgDispatcher.getClass().getSimpleName();
+            chatHandler.addMsgDispatcher(clzzName.replace("Dispatcher", ""),msgDispatcher);
+            // 注册消息处理器到 消息分发器
             ReflectionUtils.doWithMethods(msgDispatcher.getClass(), m->{
                 MsgHandler msgHandler = m.getAnnotation(MsgHandler.class);
                 String value = msgHandler.value().equals("")?m.getName():msgHandler.value();

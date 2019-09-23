@@ -81,6 +81,9 @@ public class WebRtcEndpointContext implements Context<WebRtcEndpoint> {
      * @param iceCandidate
      */
     public synchronized void addIceCandidate(String name,IceCandidate iceCandidate){
+        if(iceCandidate.getCandidate() == null || iceCandidate.getCandidate().length() == 0){
+            return;
+        }
         try{
             if(webRtcEndpointMap.containsKey(name)){
                 webRtcEndpointMap.get(name).addIceCandidate(iceCandidate);

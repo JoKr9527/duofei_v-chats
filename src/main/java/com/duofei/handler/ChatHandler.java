@@ -26,6 +26,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 聊天处理的文本handler
@@ -33,6 +35,8 @@ import javax.annotation.Resource;
  * @date 2019/8/19
  */
 public class ChatHandler extends TextWebSocketHandler {
+
+    private static Map<String, MsgDispatcher> msgDispatcherMap = new HashMap<>();
 
     @Resource
     private UserContext userContext;
@@ -79,6 +83,10 @@ public class ChatHandler extends TextWebSocketHandler {
         JsonObject jsonObject = JsonUtils.fromJson(message.getPayload());
         // 根据消息类型转换为具体对象
         final String messageType = jsonObject.get("messageType").getAsString();
+        MsgDispatcher msgDispatcher = msgDispatcherMap.get(messageType);
+        /*if(msgDispatcher != null){
+            msgDispatcher.dispatch(message.getPayload());
+        }*/
         switch (messageType){
             case "SdpMsg":
                 sdpMsgDispatcher.dispatch(message.getPayload());
@@ -95,7 +103,7 @@ public class ChatHandler extends TextWebSocketHandler {
             case "PeopleRoomMsg":
                 peopleRoomMsgDispatcher.dispatch(message.getPayload());
                 break;
-            case "RecorderMsg":
+            case "RecordMsg":
                 recordMsgDispatcher.dispatch(message.getPayload());
                 break;
             default:
@@ -125,6 +133,17 @@ public class ChatHandler extends TextWebSocketHandler {
     @Override
     public boolean supportsPartialMessages() {
         return super.supportsPartialMessages();
+    }
+
+    /**
+     * 新增消息分发器
+     * @author duofei
+     * @date 2019/9/23
+     * @param name 消息分发器名称
+     * @param msgDispatcher 消息分发器
+     */
+    public void addMsgDispatcher(String name, MsgDispatcher msgDispatcher){
+        msgDispatcherMap.put(name, msgDispatcher);
     }
 
     /**
