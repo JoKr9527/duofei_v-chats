@@ -122,4 +122,8 @@ public class PeopleRoomScope extends BaseScope {
             webRtcEndpoint.release();
         }
     }
+
+    public HubPort getHubPort(){
+        return this.hubPort;
+    }
 }

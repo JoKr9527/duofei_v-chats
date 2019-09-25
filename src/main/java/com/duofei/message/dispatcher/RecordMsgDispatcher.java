@@ -75,15 +75,23 @@ public class RecordMsgDispatcher implements MsgDispatcher {
                     }else{
                         source = oneToOneScope.getCallingFrom();
                     }
-                    initRecorder(recorder);
+                    recorder.addMediaFlowInStateChangeListener(flowIn ->{
+                        if(flowIn.getState() == MediaFlowState.NOT_FLOWING){
+                            recorder.stopAndWait();
+                        } });
                     source.connect(recorder);
+                    recorder.record();
                 }
                 // 一对多时，录制主持人
                 if(baseScope instanceof OneToManyScope){
                     OneToManyScope oneToManyScope = (OneToManyScope) baseScope;
                     WebRtcEndpoint source = oneToManyScope.getPresenter();
-                    initRecorder(recorder);
+                    recorder.addMediaFlowInStateChangeListener(flowIn ->{
+                        if(flowIn.getState() == MediaFlowState.NOT_FLOWING){
+                            recorder.stopAndWait();
+                        } });
                     source.connect(recorder);
+                    recorder.record();
                 }
                 // 多对多时，混流录制
                 if(baseScope instanceof GroupScope){
@@ -94,9 +102,26 @@ public class RecordMsgDispatcher implements MsgDispatcher {
                         groupUser.getOutgoingMedia().connect(sink);
                     });
                     HubPort source = new HubPort.Builder(composite).build();
+                    source.addMediaFlowOutStateChangeListener(flowOut ->{
+                        if(flowOut.getState() == MediaFlowState.FLOWING){
+                            recorder.record();
+                        } });
+                    recorder.addMediaFlowInStateChangeListener(flowIn ->{
+                        if(flowIn.getState() == MediaFlowState.NOT_FLOWING){
+                            recorder.stopAndWait();
+                        } });
                     source.connect(recorder);
                 }
-                recorder.record();
+                // 多人聊天时，开始录制
+                if(baseScope instanceof PeopleRoomScope){
+                    PeopleRoomScope peopleRoomScope = (PeopleRoomScope) baseScope;
+                    peopleRoomScope.getHubPort().connect(recorder);
+                    recorder.addMediaFlowInStateChangeListener(flowIn ->{
+                        if(flowIn.getState() == MediaFlowState.NOT_FLOWING){
+                            recorder.stopAndWait();
+                        } });
+                    recorder.record();
+                }
                 recorders.put(key, recorder);
             }
         };
@@ -116,6 +141,8 @@ public class RecordMsgDispatcher implements MsgDispatcher {
             RecorderEndpoint recorder = recorders.get(key);
             if(recorder != null){
                 recorder.stopAndWait();
+                recorder.release();
+                recorders.put(key, null);
             }
         };
         return result;
@@ -165,23 +192,4 @@ public class RecordMsgDispatcher implements MsgDispatcher {
         return result;
     }
 
-
-    /**
-     * 初始化 Recorder
-     * @author duofei
-     * @date 2019/9/21
-     * @param recorder 录制
-     */
-    private void initRecorder(RecorderEndpoint recorder){
-        recorder.addMediaFlowInStateChangeListener(mediaFlowIn->{
-            if(mediaFlowIn.getState() == MediaFlowState.FLOWING){
-                // recorder.record();
-            }
-        });
-        recorder.addMediaFlowOutStateChangeListener(mediaFlowOut->{
-            if(mediaFlowOut.getState() == MediaFlowState.NOT_FLOWING){
-                // recorder.stopAndWait();
-            }
-        });
-    }
 }
