@@ -31,9 +31,9 @@ import java.util.stream.Collectors;
  * @date 2019/8/20
  */
 @Component
-public class SystemEventListener {
+public class EventsListener {
 
-    private static Logger logger = LoggerFactory.getLogger(SystemEventListener.class);
+    private static Logger logger = LoggerFactory.getLogger(EventsListener.class);
 
     @Resource
     private ScopeContext scopeContext;

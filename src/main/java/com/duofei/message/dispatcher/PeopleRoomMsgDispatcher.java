@@ -53,6 +53,12 @@ public class PeopleRoomMsgDispatcher implements MsgDispatcher {
             inviteMsg.setOther(scopeId);
             inviteMsg.setId("inviteJoinPeopleRoom");
             peopleRoomScopeFactory.notifyMembers(scopeId,userMessage.getFrom(),inviteMsg);
+            // 发送多人聊天
+            SystemMessage systemMessage = new SystemMessage();
+            systemMessage.setId("onlinePeopleRoom");
+            systemMessage.setContent(scopeId);
+            peopleRoomScopeFactory.notifyMembers(scopeId,null,systemMessage);
+
         };
         return result;
     }
@@ -65,16 +71,20 @@ public class PeopleRoomMsgDispatcher implements MsgDispatcher {
     @MsgHandler
     public MsgHandle respInviteJoinPeopleRoom(){
         MsgHandle<UserMessage> result = (UserMessage userMessage) ->{
-            if(userMessage.getContent().equals(RespStatus.ACCEPT)){
-                peopleRoomScopeFactory.join(userMessage.getTo(),userMessage.getFrom());
+            if (userMessage.getContent().equals(RespStatus.ACCEPT)) {
                 // 发送创建成功通知
                 SystemMessage peopleRoomSuccessMsg = new SystemMessage();
                 peopleRoomSuccessMsg.setId("peopleRoomSuccess");
                 peopleRoomSuccessMsg.setContent(userMessage.getTo());
-                peopleRoomScopeFactory.notifyMember(userMessage.getTo(),userMessage.getFrom(),1,peopleRoomSuccessMsg);
-                peopleRoomScopeFactory.notifyMember(userMessage.getTo(),null,1,peopleRoomSuccessMsg);
-            }else if(userMessage.getContent().equals(RespStatus.REFUSE)){
-                peopleRoomScopeFactory.refuse(userMessage.getTo(),userMessage.getFrom());
+                // 通知发起人
+                if (!peopleRoomScopeFactory.isPeopelJoin(userMessage.getTo())) {
+                    peopleRoomScopeFactory.notifyMember(userMessage.getTo(), null, 1, peopleRoomSuccessMsg);
+                }
+                peopleRoomScopeFactory.join(userMessage.getTo(), userMessage.getFrom());
+                // 通知成员
+                peopleRoomScopeFactory.notifyMember(userMessage.getTo(), userMessage.getFrom(), 1, peopleRoomSuccessMsg);
+            } else if (userMessage.getContent().equals(RespStatus.REFUSE)) {
+                peopleRoomScopeFactory.refuse(userMessage.getTo(), userMessage.getFrom());
             }
         };
         return result;
@@ -90,6 +100,38 @@ public class PeopleRoomMsgDispatcher implements MsgDispatcher {
         MsgHandle<UserMessage> result = (UserMessage userMessage) ->{
             peopleRoomScopeFactory.active(userMessage.getTo(),userMessage.getFrom());
         };
+        return result;
+    }
+
+    /**
+     * 接收客户端加入请求
+     * @author duofei
+     * @date 2019/9/25
+     * @return MsgHandle
+     */
+    @MsgHandler
+    public MsgHandle joinPeopleRoom(){
+        MsgHandle<UserMessage> result = (UserMessage userMessage) ->{
+            peopleRoomScopeFactory.join(userMessage.getTo(),userMessage.getFrom());
+            // 发送域id
+            SystemMessage peopleRoomSuccessMsg = new SystemMessage();
+            peopleRoomSuccessMsg.setId("peopleRoomSuccess");
+            peopleRoomSuccessMsg.setContent(userMessage.getTo());
+            // 通知成员
+            peopleRoomScopeFactory.notifyMember(userMessage.getTo(),userMessage.getFrom(),1,peopleRoomSuccessMsg);
+        };
+        return result;
+    }
+
+    /**
+     * 接收客户端退出请求
+     * @author duofei
+     * @date 2019/9/25
+     */
+    @MsgHandler
+    public MsgHandle quitPeopleRoom(){
+        MsgHandle<UserMessage> result = (UserMessage userMessage) ->
+            peopleRoomScopeFactory.uselessMember(userMessage.getTo(),userMessage.getFrom());
         return result;
     }
 

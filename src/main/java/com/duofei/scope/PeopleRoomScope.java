@@ -1,5 +1,6 @@
 package com.duofei.scope;
 
+import com.duofei.context.WebRtcEndpointContext;
 import org.kurento.client.Composite;
 import org.kurento.client.HubPort;
 import org.kurento.client.MediaPipeline;
@@ -114,9 +115,11 @@ public class PeopleRoomScope extends BaseScope {
      * @date 2019/9/19
      * @param userName
      */
-    public void uselessMember(String userName){
+    public void uselessMember(String userName, WebRtcEndpoint webRtcEndpoint){
         if(members.containsKey(userName)){
             members.put(userName, 0);
+            this.hubPort.disconnect(webRtcEndpoint);
+            webRtcEndpoint.release();
         }
     }
 }

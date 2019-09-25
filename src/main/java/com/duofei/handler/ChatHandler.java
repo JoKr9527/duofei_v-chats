@@ -52,18 +52,6 @@ public class ChatHandler extends TextWebSocketHandler {
     private OneToOneScopeFactory oneToOneScopeFactory;
     @Autowired
     private GroupScopeFactory groupScopeFactory;
-    @Resource
-    private MsgDispatcher sdpMsgDispatcher;
-    @Resource
-    private MsgDispatcher oneToOneMsgDispatcher;
-    @Resource
-    private MsgDispatcher oneToManyMsgDispatcher;
-    @Resource
-    private MsgDispatcher groupMsgDispatcher;
-    @Resource
-    private PeopleRoomMsgDispatcher peopleRoomMsgDispatcher;
-    @Resource
-    private RecordMsgDispatcher recordMsgDispatcher;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -84,29 +72,8 @@ public class ChatHandler extends TextWebSocketHandler {
         // 根据消息类型转换为具体对象
         final String messageType = jsonObject.get("messageType").getAsString();
         MsgDispatcher msgDispatcher = msgDispatcherMap.get(messageType);
-        /*if(msgDispatcher != null){
+        if(msgDispatcher != null){
             msgDispatcher.dispatch(message.getPayload());
-        }*/
-        switch (messageType){
-            case "SdpMsg":
-                sdpMsgDispatcher.dispatch(message.getPayload());
-                break;
-            case "OneToOneMsg":
-                oneToOneMsgDispatcher.dispatch(message.getPayload());
-                break;
-            case "OneToManyMsg":
-                oneToManyMsgDispatcher.dispatch(message.getPayload());
-                break;
-            case "GroupMsg":
-                groupMsgDispatcher.dispatch(message.getPayload());
-                break;
-            case "PeopleRoomMsg":
-                peopleRoomMsgDispatcher.dispatch(message.getPayload());
-                break;
-            case "RecordMsg":
-                recordMsgDispatcher.dispatch(message.getPayload());
-                break;
-            default:
         }
     }
 

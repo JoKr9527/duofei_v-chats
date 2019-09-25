@@ -5,6 +5,7 @@ import com.duofei.context.UserContext;
 import com.duofei.context.WebRtcEndpointContext;
 import com.duofei.event.MsgSendEvent;
 import com.duofei.message.model.BaseMessage;
+import com.duofei.message.model.SystemMessage;
 import com.duofei.scope.PeopleRoomScope;
 import com.duofei.scope.Scope;
 import com.duofei.service.KurentoService;
@@ -14,8 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -92,6 +96,56 @@ public class PeopleRoomScopeFactory {
     }
 
     /**
+     * 退出多人聊天室
+     * @author duofei
+     * @date 2019/9/20
+     * @param scopeId 域id
+     * @param userName
+     */
+    public void uselessMember(String scopeId,String userName){
+        Scope scope = scopeContext.getE(scopeId);
+        if(scope instanceof PeopleRoomScope){
+            PeopleRoomScope peopleRoomScope = (PeopleRoomScope) scope;
+            // 清理webRtcEndpoint
+            WebRtcEndpoint webRtcEndpoint = webRtcEndpointContext.getE(userName);
+            peopleRoomScope.uselessMember(userName,webRtcEndpoint);
+            webRtcEndpointContext.removeE(userName);
+
+            Map<String, Integer> members = peopleRoomScope.getMembers();
+            Integer size = members.values().stream().filter(status -> {
+                if (status == 1 || status == 2) {
+                    return true;
+                }
+                return false;
+            }).collect(Collector.of(ArrayList::new, List::add, (c1, c2) -> {
+                c1.addAll(c2);
+                return c1;
+            }, List::size));
+            if(size <= 1){
+                // 发送多人聊天室关闭请求
+                SystemMessage systemMessage = new SystemMessage();
+                systemMessage.setId("peopleRoomClosed");
+                systemMessage.setContent(peopleRoomScope.getId());
+                members.forEach((un,status) -> {
+                    if(status == 1 || status == 2){
+                        if(userContext.getE(un)!=null){
+                            applicationContext.publishEvent(new MsgSendEvent(userContext.getE(un).getSession(),systemMessage));
+                        }
+                    }
+                });
+                // 发送移除聊天室
+                SystemMessage removeOnlinePeopleRoomMsg = new SystemMessage();
+                removeOnlinePeopleRoomMsg.setId("removeOnlinePeopleRoom");
+                removeOnlinePeopleRoomMsg.setContent(peopleRoomScope.getId());
+                members.forEach((un,status) ->
+                    applicationContext.publishEvent(new MsgSendEvent(userContext.getE(un).getSession(),removeOnlinePeopleRoomMsg))
+                );
+                peopleRoomScope.dispose();
+            }
+        }
+    }
+
+    /**
      * 拒绝加入多人聊天室
      * @author duofei
      * @date 2019/9/20
@@ -126,6 +180,42 @@ public class PeopleRoomScopeFactory {
             }
         }
         return -1;
+    }
+
+    /**
+     * 判断是否已经有成员加入 处于 1 或者 2状态 (排除创建者)
+     * @author duofei
+     * @date 2019/9/25
+     * @param
+     * @return boolean 有
+     * @throws
+     */
+    public boolean isPeopelJoin(String scopeId){
+        Scope scope = scopeContext.getE(scopeId);
+        if(scope instanceof PeopleRoomScope){
+            PeopleRoomScope peopleRoomScope = (PeopleRoomScope) scope;
+            List<Integer> memberStatus = new ArrayList<>();
+            peopleRoomScope.getMembers().forEach((user,status) -> {
+                if(!user.equals(peopleRoomScope.getUserName())){
+                    memberStatus.add(status);
+                }
+            });
+            return memberStatus.stream().filter(status -> {
+                if (status == 1 || status == 2 ) {
+                    return true;
+                }
+                return false;
+            }).collect(Collector.of(ArrayList::new, List::add, (c1, c2) -> {
+                c1.addAll(c2);
+                return c1;
+            }, c1 -> {
+                if (c1.size() > 0) {
+                    return true;
+                }
+                return false;
+            }));
+        }
+        return false;
     }
 
     /**
@@ -171,7 +261,7 @@ public class PeopleRoomScopeFactory {
             PeopleRoomScope peopleRoomScope = (PeopleRoomScope) scope;
             Set<String> members = peopleRoomScope.getMembers().keySet();
             members.stream().filter(member ->{
-                if(member.equals(excludeUsername)){
+                if(excludeUsername != null && member.equals(excludeUsername)){
                     return false;
                 }
                 return true;
